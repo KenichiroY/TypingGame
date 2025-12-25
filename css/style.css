@@ -1,0 +1,364 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  font-family: 'Courier New', monospace;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* グリッド背景 */
+.grid-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    linear-gradient(rgba(0, 255, 136, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 136, 0.1) 1px, transparent 1px);
+  background-size: 50px 50px;
+  animation: gridMove 20s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes gridMove {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(50px); }
+}
+
+@keyframes glow {
+  0%, 100% { text-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88, 0 0 30px #00ff88; }
+  50% { text-shadow: 0 0 20px #00ff88, 0 0 40px #00ff88, 0 0 60px #00ff88; }
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(0, 255, 136, 0.3); }
+  50% { box-shadow: 0 0 30px rgba(0, 255, 136, 0.6); }
+}
+
+@keyframes slideIn {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.container {
+  max-width: 800px;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+h1 {
+  text-align: center;
+  font-size: 28px;
+  color: #00ff88;
+  margin-bottom: 30px;
+  letter-spacing: 4px;
+  animation: glow 2s infinite;
+  text-transform: uppercase;
+}
+
+/* 画面共通 */
+.screen {
+  display: none;
+  animation: slideIn 0.5s ease-out;
+}
+
+.screen.active {
+  display: block;
+}
+
+/* ボタン */
+.btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: 3px solid #00ff88;
+  color: #fff;
+  padding: 15px 40px;
+  font-size: 16px;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 30px rgba(0, 255, 136, 0.6);
+  border-color: #ff0066;
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  background: rgba(0, 0, 0, 0.5);
+  border-color: #ff0066;
+}
+
+/* 入力フィールド */
+.game-input {
+  background: rgba(0, 0, 0, 0.6);
+  border: 3px solid #00ff88;
+  color: #00ff88;
+  padding: 18px;
+  font-size: 24px;
+  font-family: 'Courier New', monospace;
+  width: 100%;
+  text-align: center;
+  outline: none;
+  animation: pulse 2s infinite;
+  letter-spacing: 2px;
+}
+
+.game-input:focus {
+  border-color: #ff0066;
+  box-shadow: 0 0 30px rgba(255, 0, 102, 0.5);
+}
+
+.game-input::placeholder {
+  color: rgba(0, 255, 136, 0.4);
+}
+
+/* ステータスカード */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 25px;
+}
+
+.stat-card {
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid #00ff88;
+  padding: 12px 8px;
+  text-align: center;
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
+}
+
+.stat-label {
+  color: #00ff88;
+  font-size: 11px;
+  margin-bottom: 6px;
+  letter-spacing: 1px;
+}
+
+.stat-value {
+  color: #fff;
+  font-size: 22px;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.stat-value.warning { color: #ff0066; }
+.stat-value.highlight { color: #ff0066; text-shadow: 0 0 10px #ff0066; }
+.stat-value.good { color: #00ff88; }
+.stat-value.mid { color: #ffaa00; }
+
+/* 単語表示エリア */
+.word-display {
+  background: rgba(0, 0, 0, 0.8);
+  border: 3px solid #00ff88;
+  padding: 35px 25px;
+  margin-bottom: 20px;
+  text-align: center;
+  box-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
+}
+
+.kanji {
+  font-size: 52px;
+  color: #fff;
+  margin-bottom: 15px;
+  font-weight: bold;
+  letter-spacing: 6px;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+.hiragana {
+  font-size: 26px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 25px;
+  letter-spacing: 3px;
+}
+
+.romaji {
+  font-size: 30px;
+  letter-spacing: 5px;
+  padding-top: 20px;
+  border-top: 2px solid rgba(0, 255, 136, 0.3);
+}
+
+.char-pending { color: rgba(255, 255, 255, 0.3); }
+.char-correct { color: #00ff88; text-shadow: 0 0 10px #00ff88; }
+.char-wrong { color: #ff0066; text-shadow: 0 0 10px #ff0066; }
+
+/* ローディング・エラー */
+.loading-text {
+  text-align: center;
+  color: #00ff88;
+  font-size: 18px;
+  padding: 50px;
+}
+
+.error-box {
+  background: rgba(255, 0, 102, 0.1);
+  border: 2px solid #ff0066;
+  padding: 30px;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(255, 0, 102, 0.3);
+}
+
+.error-msg {
+  color: #ff0066;
+  font-size: 16px;
+  margin-bottom: 15px;
+}
+
+.error-hint {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+/* スタート画面 */
+.intro-text {
+  color: #fff;
+  font-size: 16px;
+  line-height: 2;
+  margin-bottom: 30px;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+}
+
+.word-count {
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
+}
+
+/* 結果画面 */
+.result-box {
+  background: rgba(0, 0, 0, 0.8);
+  border: 3px solid #ff0066;
+  padding: 35px;
+  margin-bottom: 25px;
+  box-shadow: 0 0 30px rgba(255, 0, 102, 0.5);
+}
+
+.result-title {
+  color: #ff0066;
+  font-size: 28px;
+  margin-bottom: 30px;
+  text-shadow: 0 0 15px #ff0066;
+  letter-spacing: 3px;
+}
+
+.result-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.result-item {
+  text-align: center;
+}
+
+.result-label {
+  color: #00ff88;
+  font-size: 12px;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+}
+
+.result-value {
+  color: #fff;
+  font-size: 28px;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.result-value.big {
+  font-size: 38px;
+}
+
+/* スコアコード */
+.code-box {
+  background: rgba(0, 255, 136, 0.1);
+  border: 2px solid #00ff88;
+  padding: 25px;
+  margin-top: 25px;
+  text-align: center;
+}
+
+.code-label {
+  color: #00ff88;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.code-value {
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  color: #fff;
+  font-size: 42px;
+  font-weight: bold;
+  letter-spacing: 10px;
+  padding: 18px;
+  margin-bottom: 15px;
+  text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+}
+
+.copy-btn {
+  background: rgba(0, 255, 136, 0.2);
+  border: 2px solid #00ff88;
+  color: #00ff88;
+  padding: 10px 25px;
+  font-size: 13px;
+  font-family: 'Courier New', monospace;
+  cursor: pointer;
+  transition: all 0.3s;
+  letter-spacing: 1px;
+}
+
+.copy-btn:hover {
+  background: rgba(0, 255, 136, 0.4);
+}
+
+.code-hint {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  margin-top: 12px;
+}
+
+.result-msg {
+  background: rgba(0, 255, 136, 0.1);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  padding: 15px;
+  margin-top: 20px;
+  font-size: 16px;
+  color: #fff;
+}
+
+.center { text-align: center; }
+
+/* レスポンシブ */
+@media (max-width: 600px) {
+  h1 { font-size: 22px; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .result-grid { grid-template-columns: 1fr; }
+  .kanji { font-size: 40px; }
+  .romaji { font-size: 24px; }
+  .code-value { font-size: 32px; letter-spacing: 6px; }
+}
