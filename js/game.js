@@ -18,7 +18,8 @@ var romajiMap = {
   'ま': ['ma'], 'み': ['mi'], 'む': ['mu'], 'め': ['me'], 'も': ['mo'],
   'や': ['ya'], 'ゆ': ['yu'], 'よ': ['yo'],
   'ら': ['ra'], 'り': ['ri'], 'る': ['ru'], 'れ': ['re'], 'ろ': ['ro'],
-  'わ': ['wa'], 'を': ['wo'], 'ん': ['nn', 'n'],
+  'わ': ['wa'], 'を': ['wo'],
+  // 「ん」は文脈によって変わるため、ここでは定義しない（generateRomajiPatternsで処理）
   'ぁ': ['xa', 'la'], 'ぃ': ['xi', 'li'], 'ぅ': ['xu', 'lu'], 'ぇ': ['xe', 'le'], 'ぉ': ['xo', 'lo'],
   'ゃ': ['xya', 'lya'], 'ゅ': ['xyu', 'lyu'], 'ょ': ['xyo', 'lyo'],
   'っ': ['xtu', 'ltu'],
@@ -35,6 +36,9 @@ var romajiMap = {
   'みゃ': ['mya'], 'みゅ': ['myu'], 'みょ': ['myo'],
   'りゃ': ['rya'], 'りゅ': ['ryu'], 'りょ': ['ryo']
 };
+
+// 「ん」の後に来ると"nn"が必須になる文字（母音、や行、な行）
+var nnRequiredAfter = ['あ', 'い', 'う', 'え', 'お', 'や', 'ゆ', 'よ', 'な', 'に', 'ぬ', 'ね', 'の', 'にゃ', 'にゅ', 'にょ'];
 
 // ゲーム状態
 var words = [];
@@ -111,6 +115,27 @@ function fallbackCopy(text) {
   document.body.removeChild(textArea);
 }
 
+// 「ん」の後に"nn"が必須かどうかを判定
+function requiresDoubleN(hiragana, position) {
+  // 末尾の「ん」は"nn"必須
+  if (position >= hiragana.length - 1) {
+    return true;
+  }
+
+  // 次の文字を取得（2文字の組み合わせも確認）
+  var nextTwo = hiragana.substring(position + 1, position + 3);
+  var nextOne = hiragana[position + 1];
+
+  // 2文字の組み合わせがnnRequiredAfterに含まれるか確認
+  for (var i = 0; i < nnRequiredAfter.length; i++) {
+    if (nnRequiredAfter[i] === nextTwo || nnRequiredAfter[i] === nextOne) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 // ローマ字パターン生成
 function generateRomajiPatterns(hiragana) {
   var results = [''];
@@ -135,6 +160,26 @@ function generateRomajiPatterns(hiragana) {
         i++;
         continue;
       }
+    }
+
+    // 「ん」の処理
+    if (hiragana[i] === 'ん') {
+      var newResults = [];
+      if (requiresDoubleN(hiragana, i)) {
+        // "nn"のみ許可
+        for (var r = 0; r < results.length; r++) {
+          newResults.push(results[r] + 'nn');
+        }
+      } else {
+        // "n"と"nn"の両方を許可
+        for (var r = 0; r < results.length; r++) {
+          newResults.push(results[r] + 'nn');
+          newResults.push(results[r] + 'n');
+        }
+      }
+      results = newResults;
+      i++;
+      continue;
     }
 
     // 2文字
@@ -206,9 +251,9 @@ function updateStats() {
   var acc = totalTyped > 0 ? Math.round((correctTyped / totalTyped) * 100) : 100;
   var accEl = document.getElementById('accuracy');
   accEl.textContent = acc + '%';
-  if (acc >= 90) {
+  if (acc >= AppConfig.accuracyGoodThreshold) {
     accEl.className = 'stat-value good';
-  } else if (acc >= 70) {
+  } else if (acc >= AppConfig.accuracyMidThreshold) {
     accEl.className = 'stat-value mid';
   } else {
     accEl.className = 'stat-value warning';
@@ -223,7 +268,7 @@ function checkInput() {
   // 完全一致
   for (var i = 0; i < acceptableRomajis.length; i++) {
     if (value === acceptableRomajis[i]) {
-      score += 10 + combo;
+      score += AppConfig.baseScore + combo;
       combo++;
       if (combo > maxCombo) maxCombo = combo;
       totalTyped += value.length;
@@ -264,7 +309,7 @@ function startGame() {
   score = 0;
   combo = 0;
   maxCombo = 0;
-  timeLeft = 60;
+  timeLeft = AppConfig.gameTime;
   totalTyped = 0;
   correctTyped = 0;
 
@@ -284,7 +329,7 @@ function startGame() {
     timeLeft--;
     var timeEl = document.getElementById('time');
     timeEl.textContent = timeLeft;
-    timeEl.className = 'stat-value' + (timeLeft <= 10 ? ' warning' : '');
+    timeEl.className = 'stat-value' + (timeLeft <= AppConfig.timerWarningThreshold ? ' warning' : '');
 
     if (timeLeft <= 0) {
       endGame();
@@ -306,10 +351,10 @@ function endGame() {
   document.getElementById('scoreCode').textContent = encodedScore;
 
   var msg = '';
-  if (acc >= 95) msg = 'パーフェクト！素晴らしい！';
-  else if (acc >= 85) msg = 'とても良くできました！';
-  else if (acc >= 70) msg = 'よくできました！';
-  else msg = 'もっと練習しよう！';
+  if (acc >= AppConfig.resultPerfectThreshold) msg = AppConfig.resultMessages.perfect;
+  else if (acc >= AppConfig.resultGreatThreshold) msg = AppConfig.resultMessages.great;
+  else if (acc >= AppConfig.resultGoodThreshold) msg = AppConfig.resultMessages.good;
+  else msg = AppConfig.resultMessages.needPractice;
   document.getElementById('resultMsg').textContent = msg;
 
   showScreen('result');
