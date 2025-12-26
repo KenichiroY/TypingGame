@@ -71,18 +71,20 @@ function encodeScore(s) {
   for (var i = 0; i < scoreStr.length; i++) {
     digits.push(parseInt(scoreStr[i], 10));
   }
-  var checksum = 0;
-  for (var i = 0; i < digits.length; i++) {
-    checksum += digits[i];
-  }
-  checksum = checksum % 10;
-  var offsets = [7, 5, 3, 9];
+
+  // チェックサム1：単純合計
+  var check1 = (digits[0] + digits[1] + digits[2] + digits[3]) % 10;
+
+  // チェックサム2：重み付き合計
+  var check2 = (digits[0]*3 + digits[1]*7 + digits[2]*2 + digits[3]*5) % 10;
+
+  var offsets = [1, 5, 3, 9];
   var encoded = [];
   for (var i = 0; i < digits.length; i++) {
     encoded.push((digits[i] + offsets[i]) % 10);
   }
-  encoded.push(checksum);
-  return encoded.join('');
+
+  return encoded.join('') + check1 + check2;
 }
 
 // コピー
