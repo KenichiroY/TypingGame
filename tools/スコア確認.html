@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>スコア確認ツール</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      font-family: 'Segoe UI', 'Hiragino Sans', 'Meiryo', sans-serif;
+    }
+
+    .container {
+      max-width: 500px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    h1 {
+      text-align: center;
+      color: #1a1a2e;
+      margin-bottom: 10px;
+      font-size: 24px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #333;
+      font-weight: bold;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 15px;
+      font-size: 28px;
+      text-align: center;
+      letter-spacing: 8px;
+      border: 3px solid #ddd;
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+
+    input[type="text"]:focus {
+      border-color: #0f3460;
+    }
+
+    input[type="text"]::placeholder {
+      letter-spacing: 2px;
+      font-size: 16px;
+      color: #aaa;
+    }
+
+    .result-box {
+      margin-top: 30px;
+      padding: 25px;
+      border-radius: 12px;
+      text-align: center;
+      transition: all 0.3s;
+    }
+
+    .result-box.valid {
+      background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+      border: 2px solid #28a745;
+    }
+
+    .result-box.invalid {
+      background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+      border: 2px solid #dc3545;
+    }
+
+    .result-box.waiting {
+      background: #f8f9fa;
+      border: 2px solid #dee2e6;
+    }
+
+    .result-label {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 10px;
+    }
+
+    .result-score {
+      font-size: 48px;
+      font-weight: bold;
+      color: #1a1a2e;
+    }
+
+    .result-box.valid .result-score {
+      color: #155724;
+    }
+
+    .result-box.invalid .result-score {
+      color: #721c24;
+      font-size: 20px;
+    }
+
+    .checksum-info {
+      margin-top: 15px;
+      font-size: 12px;
+      color: #666;
+    }
+
+    .status-icon {
+      font-size: 36px;
+      margin-bottom: 10px;
+    }
+
+    .help-text {
+      margin-top: 30px;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #666;
+      line-height: 1.6;
+    }
+
+    .help-text strong {
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>スコア確認ツール</h1>
+    <p class="subtitle">児童から報告された6桁のコードを入力してください</p>
+
+    <div class="input-group">
+      <label for="code">スコア申告コード</label>
+      <input type="text" id="code" maxlength="6" placeholder="6桁のコード" autocomplete="off">
+    </div>
+
+    <div class="result-box waiting" id="resultBox">
+      <div class="status-icon" id="statusIcon">🔍</div>
+      <div class="result-label" id="resultLabel">コードを入力してください</div>
+      <div class="result-score" id="resultScore">---</div>
+      <div class="checksum-info" id="checksumInfo"></div>
+    </div>
+
+    <div class="help-text">
+      <strong>使い方：</strong><br>
+      児童がゲーム終了時に表示される6桁のコードを入力すると、実際のスコアが表示されます。
+      コードが正しければ緑色、不正または入力ミスの場合は赤色で表示されます。
+    </div>
+  </div>
+
+  <script>
+    // デコード関数
+    function decodeScore(code) {
+      // 6桁の数字かチェック
+      if (!/^\d{6}$/.test(code)) {
+        return { valid: false, error: '6桁の数字を入力してください' };
+      }
+
+      var encoded = [];
+      for (var i = 0; i < 4; i++) {
+        encoded.push(parseInt(code[i], 10));
+      }
+      var check1Input = parseInt(code[4], 10);
+      var check2Input = parseInt(code[5], 10);
+
+      // デコード（オフセットを逆算）
+      var offsets = [1, 5, 3, 9];
+      var decoded = [];
+      for (var i = 0; i < 4; i++) {
+        decoded.push((encoded[i] - offsets[i] + 10) % 10);
+      }
+
+      // チェックサム検証
+      var check1Calc = (decoded[0] + decoded[1] + decoded[2] + decoded[3]) % 10;
+      var check2Calc = (decoded[0]*3 + decoded[1]*7 + decoded[2]*2 + decoded[3]*5) % 10;
+
+      if (check1Input !== check1Calc || check2Input !== check2Calc) {
+        return {
+          valid: false,
+          error: 'コードが正しくありません',
+          detail: '入力ミスまたは不正なコードです'
+        };
+      }
+
+      // スコアを計算
+      var score = decoded[0] * 1000 + decoded[1] * 100 + decoded[2] * 10 + decoded[3];
+
+      return {
+        valid: true,
+        score: score
+      };
+    }
+
+    // 入力イベント
+    var codeInput = document.getElementById('code');
+    var resultBox = document.getElementById('resultBox');
+    var statusIcon = document.getElementById('statusIcon');
+    var resultLabel = document.getElementById('resultLabel');
+    var resultScore = document.getElementById('resultScore');
+    var checksumInfo = document.getElementById('checksumInfo');
+
+    codeInput.addEventListener('input', function() {
+      var code = this.value.replace(/\D/g, ''); // 数字のみ
+      this.value = code;
+
+      if (code.length === 0) {
+        resultBox.className = 'result-box waiting';
+        statusIcon.textContent = '🔍';
+        resultLabel.textContent = 'コードを入力してください';
+        resultScore.textContent = '---';
+        checksumInfo.textContent = '';
+        return;
+      }
+
+      if (code.length < 6) {
+        resultBox.className = 'result-box waiting';
+        statusIcon.textContent = '⏳';
+        resultLabel.textContent = 'あと ' + (6 - code.length) + ' 桁';
+        resultScore.textContent = '---';
+        checksumInfo.textContent = '';
+        return;
+      }
+
+      var result = decodeScore(code);
+
+      if (result.valid) {
+        resultBox.className = 'result-box valid';
+        statusIcon.textContent = '✅';
+        resultLabel.textContent = '確認できました！スコアは';
+        resultScore.textContent = result.score + ' 点';
+        checksumInfo.textContent = '';
+      } else {
+        resultBox.className = 'result-box invalid';
+        statusIcon.textContent = '❌';
+        resultLabel.textContent = result.error;
+        resultScore.textContent = result.detail || '';
+        checksumInfo.textContent = '';
+      }
+    });
+
+    // ページ読み込み時にフォーカス
+    codeInput.focus();
+  </script>
+</body>
+</html>
