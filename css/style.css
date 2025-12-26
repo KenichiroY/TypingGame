@@ -336,6 +336,23 @@ h1 {
   background: rgba(0, 255, 136, 0.4);
 }
 
+.code-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.report-btn {
+  background: rgba(255, 0, 102, 0.2);
+  border-color: #ff0066;
+  color: #ff0066;
+}
+
+.report-btn:hover {
+  background: rgba(255, 0, 102, 0.4);
+}
+
 .code-hint {
   color: rgba(255, 255, 255, 0.5);
   font-size: 12px;

@@ -92,14 +92,14 @@ function copyCode() {
     navigator.clipboard.writeText(code).then(function() {
       alert('コードをコピーしました: ' + code);
     }).catch(function() {
-      fallbackCopy(code);
+      fallbackCopy(code, true);
     });
   } else {
-    fallbackCopy(code);
+    fallbackCopy(code, true);
   }
 }
 
-function fallbackCopy(text) {
+function fallbackCopy(text, showAlert) {
   var textArea = document.createElement('textarea');
   textArea.value = text;
   textArea.style.position = 'fixed';
@@ -108,11 +108,34 @@ function fallbackCopy(text) {
   textArea.select();
   try {
     document.execCommand('copy');
-    alert('コードをコピーしました: ' + text);
+    if (showAlert) {
+      alert('コードをコピーしました: ' + text);
+    }
+    return true;
   } catch (e) {
     alert('コピーできませんでした。コード: ' + text);
+    return false;
+  } finally {
+    document.body.removeChild(textArea);
   }
-  document.body.removeChild(textArea);
+}
+
+// コピーして報告ページへ移動
+function copyAndReport() {
+  var code = encodedScore;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(code).then(function() {
+      window.open(AppConfig.reportURL, '_blank');
+    }).catch(function() {
+      if (fallbackCopy(code, false)) {
+        window.open(AppConfig.reportURL, '_blank');
+      }
+    });
+  } else {
+    if (fallbackCopy(code, false)) {
+      window.open(AppConfig.reportURL, '_blank');
+    }
+  }
 }
 
 // 「ん」の後に"nn"が必須かどうかを判定
@@ -369,6 +392,11 @@ function initGame() {
   // 設定を適用
   document.title = AppConfig.pageTitle;
   document.getElementById('gameName').textContent = AppConfig.gameName;
+
+  // 報告ページURLが設定されている場合はボタンを表示
+  if (AppConfig.reportURL && AppConfig.reportURL.length > 0) {
+    document.getElementById('reportBtn').style.display = 'inline-block';
+  }
 
   // 単語データを読み込み
   words = WordData;
